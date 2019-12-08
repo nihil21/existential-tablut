@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Check arguments
+if [ "$#" -ne 3 ]; then
+	echo 'Usage: ./runmyplayer <role> <timeout> <server_ip>'
+	exit 1
+fi
+
+role_arg=$1
+tout=$2
+ip_addr=$3
+
+# Check role
+if [ "$role_arg" == 'White' ]; then
+	role='W'
+	modelF='res/model/modelFW'
+	modelT='res/model/modelTW'
+	labelF='res/label/labelFW'
+	labelT='res/label/labelTW'
+elif [ "$role_arg" == 'Black' ]; then
+	role='B'
+	modelF='res/model/modelFB'
+	modelT='res/model/modelTB'
+	labelF='res/label/labelFB'
+	labelT='res/label/labelTB'
+else
+	echo 'Error: role must be Black or White'
+	exit 2
+fi
+
+# Invoke python script
+python3 res/predictPlayNN.py -mf $modelF -mt $modelT -lf $labelF -lt $labelT -p $role -b 0 -ip "$ip_addr" -t "$tout"
