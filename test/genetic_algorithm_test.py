@@ -1,7 +1,5 @@
-from neuro_evolution.genetic_algorithm import *
 from utils.network_utils import *
-from keras.models import load_model
-import h5py
+from tensorflow.keras.models import load_model
 
 # Initial models from dataset
 modelFW_1_0 = load_model("../../StartingNets/modelFW_1_0")

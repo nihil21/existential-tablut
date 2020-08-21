@@ -144,11 +144,11 @@ def stem_score(title, scores, x, plt_color):
     plt.show()
 
 
-def stacked_bar_matches(title, win_no, draw_no, defeat_no, num_gen):
+def stacked_bar_matches(title, win_no, draw_no, defeat_no, num_gen, num_players):
     plt.title(title)
     plt.ylabel('Number of matches')
     ind = np.arange(num_gen)
-    ticks = produce_ticks(num_gen)
+    ticks = produce_ticks(num_gen, num_players)
     plt.xticks(ind, ticks[0])
     plt.yticks(ticks[1])
     width = 0.35
@@ -160,7 +160,7 @@ def stacked_bar_matches(title, win_no, draw_no, defeat_no, num_gen):
     plt.show()
 
 
-def produce_ticks(num_gen):
+def produce_ticks(num_gen, num_players):
     temp_list = []
     for i in range(0, num_gen):
         temp_list.append("Gen" + str(i))
@@ -168,34 +168,39 @@ def produce_ticks(num_gen):
 
 
 # ---------- Main ----------
-report_dir = sys.argv[1]
-num_players = sys.argv[2]
-scores_by_gen = []
-for entry in os.scandir(report_dir):
-    if entry.path.endswith(".txt"):
-        scores_by_gen.append(extract_score(entry.path))
+def main():
+    report_dir = sys.argv[1]
+    num_players = sys.argv[2]
+    scores_by_gen = []
+    for entry in os.scandir(report_dir):
+        if entry.path.endswith(".txt"):
+            scores_by_gen.append(extract_score(entry.path))
 
-# Find max and median players
-score, wins, draws, defeats, moves = max_median(scores_by_gen)
+    # Find max and median players
+    score, wins, draws, defeats, moves = max_median(scores_by_gen)
 
-# ---------- Plots for scores ----------
-x = np.linspace(0, len(scores_by_gen) - 1, len(scores_by_gen))
-plt_colors = ((63 / 255, 82 / 255, 228 / 255, 0.7), (224 / 255, 36 / 255, 36 / 255, 0.7))
+    # ---------- Plots for scores ----------
+    x = np.linspace(0, len(scores_by_gen) - 1, len(scores_by_gen))
+    plt_colors = ((63 / 255, 82 / 255, 228 / 255, 0.7), (224 / 255, 36 / 255, 36 / 255, 0.7))
 
-# ----- Max scores -----
-stem_score('Maximum score w.r.t. generation number', score[0], x, plt_colors)
+    # ----- Max scores -----
+    stem_score('Maximum score w.r.t. generation number', score[0], x, plt_colors)
 
-# ----- Median score -----
-stem_score('Median score w.r.t. generation number', score[1], x, plt_colors)
+    # ----- Median score -----
+    stem_score('Median score w.r.t. generation number', score[1], x, plt_colors)
 
-# ---------- Plots for black matches ----------
-# ----- Max matches -----
-stacked_bar_matches('Matches results of most successful black player w.r.t. generation number',
-                    wins[0][0], draws[0][0], defeats[0][0], len(scores_by_gen))
-stacked_bar_matches('Matches results of most successful white player w.r.t. generation number',
-                    wins[0][1], draws[0][1], defeats[0][1], len(scores_by_gen))
-# ----- Median matches -----
-stacked_bar_matches('Matches results of median black player w.r.t. generation number',
-                    wins[1][0], draws[1][0], defeats[1][0], len(scores_by_gen))
-stacked_bar_matches('Matches results of median white player w.r.t. generation number',
-                    wins[1][1], draws[1][1], defeats[1][1], len(scores_by_gen))
+    # ---------- Plots for black matches ----------
+    # ----- Max matches -----
+    stacked_bar_matches('Matches results of most successful black player w.r.t. generation number',
+                        wins[0][0], draws[0][0], defeats[0][0], len(scores_by_gen), num_players)
+    stacked_bar_matches('Matches results of most successful white player w.r.t. generation number',
+                        wins[0][1], draws[0][1], defeats[0][1], len(scores_by_gen), num_players)
+    # ----- Median matches -----
+    stacked_bar_matches('Matches results of median black player w.r.t. generation number',
+                        wins[1][0], draws[1][0], defeats[1][0], len(scores_by_gen), num_players)
+    stacked_bar_matches('Matches results of median white player w.r.t. generation number',
+                        wins[1][1], draws[1][1], defeats[1][1], len(scores_by_gen), num_players)
+
+
+if __name__ == '__main__':
+    main()

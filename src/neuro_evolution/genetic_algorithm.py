@@ -1,11 +1,11 @@
-import keras
+from tensorflow.keras.models import Model, clone_model
 import numpy as np
 import heapq
 from operator import itemgetter
 
 
 def evolve(cur_gen, rank, n_kept, crossover_rate, mutation_rate_individual, mutation_rate_neuron, new_gen, lock,
-           USE_BASELINE):
+           use_baseline):
     """This function implements the evolution strategy
         :param cur_gen: dictionary containing the ids of the network pair and the corresponding
             tuples (model_from, model_to)
@@ -15,8 +15,10 @@ def evolve(cur_gen, rank, n_kept, crossover_rate, mutation_rate_individual, muta
         :param mutation_rate_individual: rate of mutation for the individuals,
                 expressed as a real number between 0 and 1
         :param mutation_rate_neuron: rate of mutation for the neurons, expressed as a real number between 0 and 1
+        :param new_gen: list of the new network pairs, obtained by neuroevolution
+        :param lock: lock object that enables changes to models' weights only to one thread at a time
+        :param use_baseline: flag that enables the usage of a baseline heuristic
 
-        :return next_gen: list of the new network pairs, obtained by neuroevolution
     """
     # Seed
     np.random.seed(42)
@@ -39,7 +41,7 @@ def evolve(cur_gen, rank, n_kept, crossover_rate, mutation_rate_individual, muta
         new_gen.append((clone_from, clone_to))
 
     # Check if the remainder individuals are uneven
-    if USE_BASELINE:
+    if use_baseline:
         remainder = len(cur_gen) + 1 - n_kept
     else:
         remainder = len(cur_gen) - n_kept
@@ -52,7 +54,7 @@ def evolve(cur_gen, rank, n_kept, crossover_rate, mutation_rate_individual, muta
         remainder -= 1
 
     # Selection + crossover + mutation
-    if USE_BASELINE:
+    if use_baseline:
         limit = len(cur_gen) + 1 - n_kept
     else:
         limit = len(cur_gen) - n_kept
@@ -126,12 +128,13 @@ def mutate(model, rate_individual, rate_neuron, lock):
         :param model: the Neural Network of type keras.engine.training.Model that must be mutated
         :param rate_individual: the mutation rate for the individuals, expressed as a real number between 0 and 1
         :param rate_neuron: the mutation rate for the neurons, expressed as a real number between 0 and 1
+        :param lock: lock object that enables changes to models' weights only to one thread at a time
 
         :returns new_model: the new Neural Network of type keras.engine.training.Model
     """
 
     # Parameter check
-    if not isinstance(model, keras.models.Model):
+    if not isinstance(model, Model):
         raise TypeError('keras.engine.training.Model expected,', type(model), 'found')
 
     # Mutation function to be applied
@@ -146,7 +149,7 @@ def mutate(model, rate_individual, rate_neuron, lock):
 
     # Apply mutation_fn
     with lock:
-        new_model = keras.models.clone_model(model)
+        new_model = clone_model(model)
         dna = model.get_weights()
     new_dna = []
     if np.random.rand() < rate_individual:
@@ -169,19 +172,20 @@ def crossover(parent1, parent2, rate, lock):
         :param parent1: the first parent Neural Network of type keras.engine.training.Model
         :param parent2: the second parent Neural Network of type keras.engine.training.Model
         :param rate: the crossover rate, expressed as a real number between 0 and 1
+        :param lock: lock object that enables changes to models' weights only to one thread at a time
 
         :returns child1: the first child Neural Network of type keras.engine.training.Model
         :returns child2: the second child Neural Network of type keras.engine.training.Model
     """
 
     # Parameter check
-    if not isinstance(parent1, keras.models.Model) or not isinstance(parent2, keras.models.Model):
+    if not isinstance(parent1, Model) or not isinstance(parent2, Model):
         raise TypeError('Two keras.engine.training.Model expected,', type(parent1), 'and', type(parent2), 'found')
 
     # Cloning of parents
     with lock:
-        child1 = keras.models.clone_model(parent1)
-        child2 = keras.models.clone_model(parent2)
+        child1 = clone_model(parent1)
+        child2 = clone_model(parent2)
     if np.random.rand() < rate:
         # DNA
         with lock:
